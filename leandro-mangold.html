@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leandro Mangold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #0f0d0a;
+      --paper:     #f5f0e8;
+      --cream:     #ede8dc;
+      --rust:      #c0522a;
+      --rust-dim:  #8a3a1d;
+      --gold:      #c49a3c;
+      --muted:     #7a736a;
+      --line:      rgba(15,13,10,.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom cursor ── */
+    .cursor {
+      position: fixed; top: 0; left: 0; z-index: 9999;
+      pointer-events: none;
+    }
+    .cursor__dot {
+      width: 8px; height: 8px;
+      background: var(--rust);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform .1s;
+    }
+    .cursor__ring {
+      position: fixed; top: 0; left: 0;
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--rust);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform .25s ease, width .25s, height .25s, opacity .25s;
+      opacity: .5;
+      pointer-events: none;
+      z-index: 9998;
+    }
+    body:hover .cursor__ring { opacity: 1; }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+    }
+
+    .hero__left {
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 5rem 4rem 5rem 6rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero__eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp .8s .2s forwards;
+    }
+
+    .hero__name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(3.5rem, 7vw, 7rem);
+      line-height: .95;
+      letter-spacing: -.02em;
+      opacity: 0;
+      animation: fadeUp .9s .4s forwards;
+    }
+
+    .hero__name em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .hero__tagline {
+      margin-top: 2rem;
+      max-width: 30ch;
+      font-size: 1.05rem;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp .8s .7s forwards;
+    }
+
+    .hero__cta {
+      margin-top: 3rem;
+      display: flex; gap: 1.2rem; align-items: center;
+      opacity: 0;
+      animation: fadeUp .8s 1s forwards;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 1.8rem;
+      background: var(--rust);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: none;
+      transition: background .2s, transform .2s;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+    .btn:hover { background: var(--rust-dim); transform: translateY(-2px); }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--ink);
+      clip-path: none;
+    }
+    .btn--ghost:hover { background: var(--ink); color: var(--paper); }
+
+    /* diagonal divider */
+    .hero__right {
+      position: relative;
+      background: var(--ink);
+      clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero__right::after {
+      content: ':)';
+      font-family: 'Playfair Display', serif;
+      font-size: 22vw;
+      font-weight: 900;
+      color: rgba(255,255,255,.04);
+      position: absolute;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .hero__grid-lines {
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 80px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 80px);
+    }
+
+    .hero__stats {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; gap: 2.5rem;
+      padding: 4rem;
+      opacity: 0; animation: fadeIn 1.2s 1s forwards;
+    }
+
+    .stat__num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat__num span { color: var(--rust); }
+
+    .stat__label {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      margin-top: .3rem;
+    }
+
+    /* scroll indicator */
+    .scroll-hint {
+      position: absolute; bottom: 2.5rem; left: 6rem;
+      display: flex; align-items: center; gap: .75rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0; animation: fadeIn 1s 1.5s forwards;
+    }
+    .scroll-hint__line {
+      width: 40px; height: 1px; background: var(--rust);
+      animation: expandLine 1s 1.6s both;
+    }
+    @keyframes expandLine { from { width: 0; } to { width: 40px; } }
+
+    /* ── ABOUT ── */
+    .about {
+      display: grid; grid-template-columns: 1fr 2fr;
+      gap: 6rem;
+      padding: 8rem 6rem;
+      border-top: 1px solid var(--line);
+      position: relative; z-index: 1;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--rust);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      align-self: flex-start;
+      padding-top: .5rem;
+    }
+
+    .about__content {}
+
+    .about__heading {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+    }
+    .about__heading em { font-style: italic; color: var(--rust); }
+
+    .about__text {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 60ch;
+      margin-bottom: 1.5rem;
+    }
+
+    .about__divider {
+      width: 40px; height: 2px;
+      background: var(--gold);
+      margin: 2.5rem 0;
+    }
+
+    .skills {
+      display: flex; flex-wrap: wrap; gap: .6rem;
+      margin-top: 2rem;
+    }
+    .skill-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem; letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .4rem 1rem;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: var(--cream);
+      transition: border-color .2s, color .2s;
+    }
+    .skill-tag:hover { border-color: var(--rust); color: var(--rust); }
+
+    /* ── WORKS ── */
+    .works {
+      padding: 8rem 6rem;
+      background: var(--ink);
+      position: relative; z-index: 1;
+      overflow: hidden;
+    }
+    .works::before {
+      content: 'WORKS';
+      font-family: 'Playfair Display', serif;
+      font-size: 18vw;
+      font-weight: 900;
+      color: rgba(255,255,255,.03);
+      position: absolute;
+      bottom: -3rem; right: -2rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .works__header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 4rem;
+    }
+    .works__title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: #fff;
+      font-weight: 700;
+    }
+    .works__title em { font-style: italic; color: var(--rust); }
+
+    .works__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5px;
+    }
+
+    .work-card {
+      background: #1a1713;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: background .3s;
+      cursor: none;
+    }
+    .work-card:hover { background: #221f1a; }
+
+    .work-card__num {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem; letter-spacing: .2em;
+      color: var(--rust);
+      margin-bottom: 1.5rem;
+    }
+    .work-card__title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .work-card__desc {
+      font-size: .875rem;
+      color: rgba(255,255,255,.4);
+      line-height: 1.6;
+    }
+    .work-card__arrow {
+      position: absolute; bottom: 2rem; right: 2rem;
+      width: 36px; height: 36px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.3);
+      font-size: 1rem;
+      transition: border-color .2s, color .2s;
+    }
+    .work-card:hover .work-card__arrow { border-color: var(--rust); color: var(--rust); }
+
+    /* ── QUOTE ── */
+    .quote-section {
+      padding: 7rem 6rem;
+      display: flex; justify-content: center;
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .quote {
+      max-width: 700px; text-align: center;
+    }
+    .quote__mark {
+      font-family: 'Playfair Display', serif;
+      font-size: 6rem; line-height: .6;
+      color: var(--rust); opacity: .3;
+      display: block; margin-bottom: 1rem;
+    }
+    .quote__text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-style: italic;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    .quote__author {
+      margin-top: 1.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem; letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── CONTACT ── */
+    .contact {
+      padding: 8rem 6rem;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      position: relative; z-index: 1;
+    }
+    .contact__heading {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 900;
+      line-height: .95;
+    }
+    .contact__heading em { font-style: italic; color: var(--rust); }
+
+    .contact__sub {
+      margin-top: 1.5rem;
+      font-size: 1rem; color: var(--muted);
+      max-width: 35ch;
+    }
+
+    .contact__form { display: flex; flex-direction: column; gap: 1rem; }
+
+    .form-field {
+      display: flex; flex-direction: column; gap: .4rem;
+    }
+    .form-field label {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem; letter-spacing: .15em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .form-field input,
+    .form-field textarea {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      padding: .9rem 1rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: .9rem;
+      color: var(--ink);
+      outline: none;
+      resize: vertical;
+      transition: border-color .2s;
+      cursor: none;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus { border-color: var(--rust); }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 2.5rem 6rem;
+      background: var(--ink);
+      display: flex; justify-content: space-between; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .footer__name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 700; color: #fff;
+    }
+    .footer__copy {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem; letter-spacing: .15em;
+      text-transform: uppercase; color: rgba(255,255,255,.3);
+    }
+    .footer__links {
+      display: flex; gap: 1.5rem;
+    }
+    .footer__links a {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem; letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer__links a:hover { color: var(--rust); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    /* ── Scroll-reveal ── */
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity .8s ease, transform .8s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: .1s; }
+    .reveal-d2 { transition-delay: .2s; }
+    .reveal-d3 { transition-delay: .3s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero__right { display: none; }
+      .hero__left { padding: 5rem 2rem; justify-content: center; }
+      .about { grid-template-columns: 1fr; gap: 2rem; padding: 5rem 2rem; }
+      .section-label { writing-mode: horizontal-tb; transform: none; }
+      .works { padding: 5rem 2rem; }
+      .works__grid { grid-template-columns: 1fr; }
+      .contact { grid-template-columns: 1fr; padding: 5rem 2rem; gap: 3rem; }
+      .footer { flex-direction: column; gap: 1rem; padding: 2rem; text-align: center; }
+      .quote-section { padding: 5rem 2rem; }
+      .scroll-hint { left: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor"><div class="cursor__dot"></div></div>
+  <div class="cursor__ring"></div>
+
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+    <div class="hero__left">
+      <span class="hero__eyebrow">Portfolio &nbsp;/&nbsp; 2026</span>
+      <h1 class="hero__name">Leandro<br><em>Mangold</em></h1>
+      <p class="hero__tagline">
+        Diseñador &amp; desarrollador apasionado por construir experiencias digitales que perduren en la memoria.
+      </p>
+      <div class="hero__cta">
+        <a href="#works" class="btn">Acerca de mí</a>
+        <a href="#contact" class="btn btn--ghost">Contactar</a>
+      </div>
+    </div>
+    <div class="hero__right">
+      <div class="hero__grid-lines"></div>
+      <div class="hero__stats">
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-hint__line"></div>
+      scroll
+    </div>
+  </section>
+
+  <!-- ══ ABOUT ══ -->
+  <section class="about">
+    <div><span class="section-label">MI SERIE FAVORITA</span></div>
+    <div class="about__content">
+<!-- ══ ABOUT ══ -->
+<section class="about" style="
+  background:
+    linear-gradient(rgba(0,0,0,.72), rgba(0,0,0,.72)),
+    url('https://wallpapercave.com/wp/lCP1xHb.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+">
+
+  <div>
+    <span class="section-label" style="color:#c0522a;">
+      Más de mí
+    </span>
+  </div>
+
+  <div class="about__content">
+    <h2 class="about__heading reveal">
+      Construyo cosas que<br>
+      <em>importan</em>
+    </h2>
+
+    <p class="about__text reveal reveal-d1" style="color: rgba(255,255,255,.82);">
+      Una de las series que más me marcó fue The Walking Dead.
+      No solamente por los zombies o la supervivencia, sino por
+      cómo muestra la evolución humana cuando todo se derrumba.
+    </p>
+
+    <p class="about__text reveal reveal-d2" style="color: rgba(255,255,255,.72);">
+      Me gustan las historias oscuras, los personajes con conflictos reales
+      y la sensación constante de que cualquier decisión puede cambiarlo todo.
+      The Walking Dead tiene una estética y una atmósfera que siempre me inspiraron.
+    </p>
+
+    <div class="about__divider reveal reveal-d2"></div>
+
+    <div class="skills reveal reveal-d3">
+      <span class="skill-tag">The Walking Dead</span>
+      <span class="skill-tag">Rick Grimes</span>
+      <span class="skill-tag">Supervivencia</span>
+      <span class="skill-tag">Drama</span>
+      <span class="skill-tag">Apocalipsis</span>
+      <span class="skill-tag">AMC</span>
+    </div>
+  </div>
+</section>
+      <div class="about__divider reveal reveal-d2"></div>
+      <div class="skills reveal reveal-d3">
+        <span class="skill-tag">Negan</span>
+        <span class="skill-tag">Daryl</span>
+        <span class="skill-tag">Carl</span>
+        <span class="skill-tag">Michonne</span>
+        <span class="skill-tag">Maggie</span>
+        <span class="skill-tag">Lori</span>
+        <span class="skill-tag">Carol</span>
+        <span class="skill-tag">Judith</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WORKS ══ -->
+  <section class="works" id="works">
+    <div class="works__header">
+      <h2 class="works__title reveal">ACERCA DE MÍ<br></h2>
+    </div>
+    <div class="works__grid">
+      <div class="work-card reveal">
+        <div class="work-card__num">01 &mdash;</div>
+        <div class="work-card__title">Gamer</div>
+        <p class="work-card__desc">Me gusta matar el tiempo jugando videojuegos</p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+      <div class="work-card reveal reveal-d1">
+        <div class="work-card__num">02 &mdash;</div>
+        <div class="work-card__title">Cinéfilo</div>
+        <p class="work-card__desc">Soy un apasionado del cine. Me encanta ver películas, series, cortometrajes.</p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+      <div class="work-card reveal reveal-d2">
+        <div class="work-card__num">03 &mdash;</div>
+        <div class="work-card__title">Cuántos años tengo?</div>
+        <p class="work-card__desc">Nací el 21 de marzo del 2004. Tengo 22 años</p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+      <div class="work-card reveal reveal-d1">
+        <div class="work-card__num">04 &mdash;</div>
+        <div class="work-card__title">Color favorito?</div>
+        <p class="work-card__desc"><p>
+  <span style="color: white;">Mi color favorito? El </span>
+  <span style="color: midnightblue;">azul medianoche</span>
+</p></p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+      <div class="work-card reveal reveal-d2">
+        <div class="work-card__num">05 &mdash;</div>
+        <div class="work-card__title">Redes?</div>
+        <p class="work-card__desc">Tengo redes sociales, pero no las uso mucho.</p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+      <div class="work-card reveal reveal-d3">
+        <div class="work-card__num">06 &mdash;</div>
+        <div class="work-card__title">Si tuvieras que elegir una película favorita, cuál sería?</div>
+        <p class="work-card__desc">Sería The Shawshank Redemption</p>
+        <div class="work-card__arrow">↗</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ QUOTE ══ -->
+  <section class="quote-section">
+    <blockquote class="quote reveal">
+      <span class="quote__mark">&ldquo;</span>
+      <p class="quote__text">We are the walking dead.</p>
+      <footer class="quote__author">— Rick Grimes</footer>
+    </blockquote>
+  </section>
+
+  <!-- ══ CONTACT ══ -->
+  <section class="contact" id="contact">
+    <div>
+      <h2 class="contact__heading reveal">Hablemos<br><em>juntos.</em></h2>
+      <p class="contact__sub reveal reveal-d1">
+        Tenés un proyeco en mente? Contactame para que te ayude a cumplirlo.
+      </p>
+    </div>
+    <div class="contact__form reveal reveal-d1">
+      <div class="form-field">
+        <label>Tu nombre</label>
+        <input type="text" placeholder="Juan García" />
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" placeholder="hola@ejemplo.com" />
+      </div>
+      <div class="form-field">
+        <label>Mensaje</label>
+        <textarea rows="5" placeholder="Contame sobre tu proyecto..."></textarea>
+      </div>
+      <button class="btn" style="align-self:flex-start;margin-top:.5rem">Enviar mensaje →</button>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer">
+    <span class="footer__name">Leandro Mangold</span>
+    <div class="footer__links">
+      <a href="https://discord.com/users/thespecktro">Discord</a>
+      <a href="https://github.com/leandromangold">GitHub</a>
+      <a href="https://youtube.com/@notspecktro">YouTube</a>
+      <a href="https://instagram.com/leandromangold21">Instagram</a>
+    </div>
+    <span class="footer__copy">&copy; 2026 &mdash; Todos los derechos reservados</span>
+  </footer>
+
+  <script>
+    /* ── Cursor ── */
+    const dot  = document.querySelector('.cursor__dot');
+    const ring = document.querySelector('.cursor__ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    });
+
+    (function animRing() {
+      rx += (mx - rx) * .12;
+      ry += (my - ry) * .12;
+      ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+      requestAnimationFrame(animRing);
+    })();
+
+    document.querySelectorAll('a,button,input,textarea,.work-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        ring.style.width = '56px';
+        ring.style.height = '56px';
+        ring.style.borderColor = 'var(--gold)';
+      });
+      el.addEventListener('mouseleave', () => {
+        ring.style.width = '36px';
+        ring.style.height = '36px';
+        ring.style.borderColor = 'var(--rust)';
+      });
+    });
+
+    /* ── Scroll reveal ── */
+    const revealEls = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: .15 });
+    revealEls.forEach(el => obs.observe(el));
+
+    /* ── Counter animation ── */
+    function animCount(el, target, suffix = '') {
+      let start = 0;
+      const step = () => {
+        start += Math.ceil((target - start) / 8) || 1;
+        el.innerHTML = (start < 10 ? '0' + start : start) + `<span>${suffix}</span>`;
+        if (start < target) requestAnimationFrame(step);
+      };
+      step();
+    }
+
+    const statObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const nums = e.target.querySelectorAll('.stat__num');
+          const targets = [8, 42, 19];
+          nums.forEach((n, i) => animCount(n, targets[i], '+'));
+          statObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: .5 });
+
+    const statsBlock = document.querySelector('.hero__stats');
+    if (statsBlock) statObs.observe(statsBlock);
+  </script>
+</body>
+</html>
